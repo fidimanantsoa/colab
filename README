@@ -1,1 +1,37 @@
-README
+# Veille EDBM — audit méthodologique et contrôle QA final
+
+Ce dépôt contient l’audit de la méthode de veille EDBM et un premier point d’intégration pour la revue externe du livrable final.
+
+## Livrables du dépôt
+
+- [`docs/audit-methode-veille-edbm.md`](docs/audit-methode-veille-edbm.md) — analyse des incohérences/difficultés observées dans la méthode et les récapitulatifs, recommandations priorisées et critères d’acceptation.
+- [`tools/final_qa.py`](tools/final_qa.py) — contrat de transfert vers un agent externe, empreintes SHA-256 de la source et du rendu, puis validation de son retour structuré. Il ne contacte aucun fournisseur, ne certifie pas les faits et ne publie rien.
+- [`tests/test_final_qa.py`](tests/test_final_qa.py) — tests du point d’intégration.
+
+## Étape QA externe
+
+Figer la source éditable UTF-8 après assemblage, rendre le PDF candidat, puis créer le paquet de revue :
+
+```bash
+python tools/final_qa.py handoff path/to/candidat.md \
+  --rendered path/to/candidat.pdf \
+  --out path/to/revue-externe.md
+```
+
+Transmettre le paquet et le PDF à l’agent externe autorisé. Lui demander de retourner le JSON conforme au contrat inclus dans le paquet, sans modification silencieuse du document. Enregistrer ce JSON, par exemple `path/to/rapport-qa.json`, puis vérifier les empreintes :
+
+```bash
+python tools/final_qa.py validate path/to/candidat.md \
+  path/to/rapport-qa.json \
+  --rendered path/to/candidat.pdf
+```
+
+Une empreinte différente, un contrôle manquant/non passé, une modification de forme non rejouée, ou un défaut bloquant/majeur ouvert refuse la validation. Un succès signifie uniquement que le rapport est cohérent avec les fichiers et les critères du contrat; une personne responsable doit encore approuver et publier la version exacte.
+
+L’outil ne doit recevoir que des documents autorisés pour l’agent externe. Ne pas transmettre de secrets, de fichiers `.env` ou de données internes non nécessaires. La source doit être une version UTF-8 éditable; le PDF rendu est fourni séparément pour la revue de mise en page. L’intégration directe au fournisseur reste à réaliser une fois son API, son identité, ses règles de confidentialité et son mécanisme d’authentification définis.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests -v
+```
